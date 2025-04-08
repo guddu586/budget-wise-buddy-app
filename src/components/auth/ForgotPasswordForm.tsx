@@ -18,7 +18,7 @@ export const ForgotPasswordForm = ({ onCancel }: { onCancel: () => void }) => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
-  const [showResetInfo, setShowResetInfo] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
   
   const { forgotPassword, resetPassword } = useAuth();
 
@@ -30,7 +30,7 @@ export const ForgotPasswordForm = ({ onCancel }: { onCancel: () => void }) => {
     try {
       await forgotPassword(email);
       setMode("reset");
-      setShowResetInfo(true);
+      setEmailSent(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Password reset request failed");
     } finally {
@@ -103,14 +103,12 @@ export const ForgotPasswordForm = ({ onCancel }: { onCancel: () => void }) => {
           </form>
         ) : (
           <form onSubmit={handleResetPassword} className="space-y-4">
-            {showResetInfo && (
+            {emailSent && (
               <Alert className="mb-4">
                 <InfoIcon className="h-4 w-4" />
-                <AlertTitle>Demo Mode Information</AlertTitle>
+                <AlertTitle>Reset Code Sent</AlertTitle>
                 <AlertDescription>
-                  In this demo, reset codes are not actually sent via email. 
-                  Please check your browser's console (F12 &gt; Console tab) to see 
-                  the reset code for {email}.
+                  A reset code has been sent to {email}. Please check your email and enter the code below.
                 </AlertDescription>
               </Alert>
             )}

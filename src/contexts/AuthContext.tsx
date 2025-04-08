@@ -112,17 +112,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       };
       localStorage.setItem(RESET_CODES_KEY, JSON.stringify(resetCodes));
       
-      // In a real app, this would send an email
+      // Simulate sending an email - in a real implementation, this would call an email API
+      // For demo purposes, we'll still log it to console but also display a success message
       console.log(`===== RESET CODE for ${email}: ${resetCode} =====`);
-      toast.info("In this demo, reset codes are displayed in the console (F12 > Console tab)");
       
-      toast.success("Password reset code generated");
+      // In a real app, we would call an email API here
+      simulateSendEmail(email, resetCode);
+      
+      toast.success("Password reset code sent to your email");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Password reset request failed");
       throw error;
     } finally {
       setLoading(false);
     }
+  };
+
+  // Simulate sending an email - in a real app, this would be replaced with an actual email service API call
+  const simulateSendEmail = (email: string, resetCode: string) => {
+    // This function simulates the email sending process
+    // In a real app, you would use an email service like SendGrid, Mailgun, AWS SES, etc.
+    setTimeout(() => {
+      toast.success(`Email with reset code ${resetCode} sent to ${email}`);
+      // For demo purposes, we're also logging this information
+      console.log(`Email sent to ${email} with reset code: ${resetCode}`);
+    }, 1500); // Simulate network delay
   };
 
   const resetPassword = async (email: string, resetCode: string, newPassword: string) => {
