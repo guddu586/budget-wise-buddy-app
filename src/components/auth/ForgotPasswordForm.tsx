@@ -108,7 +108,10 @@ export const ForgotPasswordForm = ({ onCancel }: { onCancel: () => void }) => {
                 <InfoIcon className="h-4 w-4" />
                 <AlertTitle>Reset Code Sent</AlertTitle>
                 <AlertDescription>
-                  A reset code has been sent to {email}. Please check your email and enter the code below.
+                  <p>A reset code has been sent to {email}. Please check your email and enter the code below.</p>
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    Note: In this demo app, no actual email is sent. For testing purposes, the reset code is displayed in your browser console (F12 &gt; Console).
+                  </p>
                 </AlertDescription>
               </Alert>
             )}

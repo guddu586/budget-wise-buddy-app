@@ -112,12 +112,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       };
       localStorage.setItem(RESET_CODES_KEY, JSON.stringify(resetCodes));
       
-      // Simulate sending an email - in a real implementation, this would call an email API
-      // For demo purposes, we'll still log it to console but also display a success message
+      // For demo purposes, log the reset code to console
       console.log(`===== RESET CODE for ${email}: ${resetCode} =====`);
       
-      // In a real app, we would call an email API here
-      simulateSendEmail(email, resetCode);
+      // In a real production app, we would use a backend service to send an email
+      // This would typically involve making an API call to your backend
+      // Example pseudo-code for a real implementation:
+      /*
+        await fetch('https://your-backend-api.com/send-reset-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            email, 
+            resetCode,
+            // potentially other data like app name, reset URL, etc.
+          })
+        });
+      */
+      
+      // For this demo, we simulate the email sending process
+      simulateEmailSending(email, resetCode);
       
       toast.success("Password reset code sent to your email");
     } catch (error) {
@@ -128,14 +142,42 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Simulate sending an email - in a real app, this would be replaced with an actual email service API call
-  const simulateSendEmail = (email: string, resetCode: string) => {
-    // This function simulates the email sending process
-    // In a real app, you would use an email service like SendGrid, Mailgun, AWS SES, etc.
+  // Simulate the email sending process (for demo purposes only)
+  const simulateEmailSending = (email: string, resetCode: string) => {
+    // In a real app, this would be replaced with an actual email service integration
+    // Possible email services include:
+    // - SendGrid
+    // - Mailgun
+    // - Amazon SES
+    // - Gmail API (which would require OAuth2 authentication)
+    // - Nodemailer with SMTP (for backend implementations)
+    
     setTimeout(() => {
-      toast.success(`Email with reset code ${resetCode} sent to ${email}`);
-      // For demo purposes, we're also logging this information
-      console.log(`Email sent to ${email} with reset code: ${resetCode}`);
+      toast.success(`For demo purposes: Email with reset code ${resetCode} would be sent to ${email}`);
+      console.log(`[DEMO] Email would be sent to ${email} with reset code: ${resetCode}`);
+      
+      // Example of what the email content might look like:
+      console.log(`
+=============== SIMULATED EMAIL CONTENT ===============
+From: BudgetWise <noreply@budgetwise.com>
+To: ${email}
+Subject: Password Reset Code for BudgetWise
+
+Hello,
+
+You recently requested to reset your password for your BudgetWise account.
+Please use the following code to reset your password:
+
+${resetCode}
+
+This code will expire in 30 minutes.
+
+If you did not request a password reset, please ignore this email or contact support.
+
+Best regards,
+The BudgetWise Team
+============================================================
+      `);
     }, 1500); // Simulate network delay
   };
 
