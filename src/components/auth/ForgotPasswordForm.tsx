@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { InfoIcon } from "lucide-react";
 
 type ResetMode = "request" | "reset";
 
@@ -16,6 +18,7 @@ export const ForgotPasswordForm = ({ onCancel }: { onCancel: () => void }) => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [showResetInfo, setShowResetInfo] = useState(false);
   
   const { forgotPassword, resetPassword } = useAuth();
 
@@ -27,6 +30,7 @@ export const ForgotPasswordForm = ({ onCancel }: { onCancel: () => void }) => {
     try {
       await forgotPassword(email);
       setMode("reset");
+      setShowResetInfo(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Password reset request failed");
     } finally {
@@ -99,6 +103,17 @@ export const ForgotPasswordForm = ({ onCancel }: { onCancel: () => void }) => {
           </form>
         ) : (
           <form onSubmit={handleResetPassword} className="space-y-4">
+            {showResetInfo && (
+              <Alert className="mb-4">
+                <InfoIcon className="h-4 w-4" />
+                <AlertTitle>Demo Mode Information</AlertTitle>
+                <AlertDescription>
+                  In this demo, reset codes are not actually sent via email. 
+                  Please check your browser's console (F12 &gt; Console tab) to see 
+                  the reset code for {email}.
+                </AlertDescription>
+              </Alert>
+            )}
             <div className="space-y-2">
               <Label htmlFor="reset-code">Reset Code</Label>
               <Input

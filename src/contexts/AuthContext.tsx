@@ -113,9 +113,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       localStorage.setItem(RESET_CODES_KEY, JSON.stringify(resetCodes));
       
       // In a real app, this would send an email
-      console.log(`Reset code for ${email}: ${resetCode}`);
+      console.log(`===== RESET CODE for ${email}: ${resetCode} =====`);
+      toast.info("In this demo, reset codes are displayed in the console (F12 > Console tab)");
       
-      toast.success("Password reset instructions sent to your email");
+      toast.success("Password reset code generated");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Password reset request failed");
       throw error;
