@@ -5,8 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
+import { ForgotPasswordForm } from "./ForgotPasswordForm";
 
-type AuthMode = "login" | "signup";
+type AuthMode = "login" | "signup" | "forgot-password";
 
 export const AuthForm = () => {
   const [mode, setMode] = useState<AuthMode>("login");
@@ -39,6 +40,10 @@ export const AuthForm = () => {
       setIsSubmitting(false);
     }
   };
+
+  if (mode === "forgot-password") {
+    return <ForgotPasswordForm onCancel={() => setMode("login")} />;
+  }
 
   return (
     <Card className="w-full max-w-md mx-auto">
@@ -74,6 +79,18 @@ export const AuthForm = () => {
               required
               minLength={6}
             />
+            {mode === "login" && (
+              <Button 
+                variant="link" 
+                className="p-0 h-auto text-xs"
+                onClick={(e) => {
+                  e.preventDefault();
+                  setMode("forgot-password");
+                }}
+              >
+                Forgot password?
+              </Button>
+            )}
           </div>
           {error && (
             <div className="text-destructive text-sm">{error}</div>
