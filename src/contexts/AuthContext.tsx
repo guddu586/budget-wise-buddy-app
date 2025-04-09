@@ -8,6 +8,15 @@ const USERS_STORAGE_KEY = "expense-tracker-users";
 const CURRENT_USER_KEY = "expense-tracker-current-user";
 const RESET_CODES_KEY = "expense-tracker-reset-codes";
 
+// Default users for easy testing
+const DEFAULT_USERS = [
+  {
+    id: "123456",
+    email: "demo@example.com",
+    password: "password123"
+  }
+];
+
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -15,6 +24,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Initialize default users if none exist
+    const storedUsers = localStorage.getItem(USERS_STORAGE_KEY);
+    if (!storedUsers) {
+      localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(DEFAULT_USERS));
+    }
+
     // Check if user is already logged in
     const storedUser = localStorage.getItem(CURRENT_USER_KEY);
     if (storedUser) {
