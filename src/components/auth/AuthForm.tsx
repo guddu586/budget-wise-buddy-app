@@ -6,8 +6,6 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { ForgotPasswordForm } from "./ForgotPasswordForm";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { InfoIcon } from "lucide-react";
 
 type AuthMode = "login" | "signup" | "forgot-password";
 
@@ -60,15 +58,6 @@ export const AuthForm = () => {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        {mode === "login" && (
-          <Alert className="mb-4 bg-blue-50 text-blue-800 border-blue-200">
-            <InfoIcon className="h-4 w-4" />
-            <AlertDescription>
-              <p>Demo account available: <strong>demo@example.com / password123</strong></p>
-            </AlertDescription>
-          </Alert>
-        )}
-        
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
