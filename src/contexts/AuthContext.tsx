@@ -76,26 +76,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const signInWithGoogle = async () => {
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: window.location.origin
-        }
-      });
-      
-      if (error) throw error;
-      
-      // The rest is handled by the onAuthStateChange listener
-      toast.success("Redirecting to Google sign-in...");
-    } catch (error) {
-      console.error("Google sign-in error:", error);
-      toast.error(error instanceof Error ? error.message : "Google sign-in failed");
-      throw error;
-    }
-  };
-
   const signup = async (email: string, password: string) => {
     setLoading(true);
     try {
@@ -172,8 +152,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       signup, 
       logout,
       forgotPassword,
-      resetPassword,
-      signInWithGoogle
+      resetPassword
     }}>
       {children}
     </AuthContext.Provider>
