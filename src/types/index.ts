@@ -28,6 +28,7 @@ export interface AuthContextType {
   logout: () => void;
   forgotPassword: (email: string) => Promise<void>;
   resetPassword: (email: string, resetCode: string, newPassword: string) => Promise<void>;
+  signInWithGoogle: () => Promise<void>;
 }
 
 export interface ExpenseContextType {

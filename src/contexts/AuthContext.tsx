@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { AuthContextType, User } from "../types";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 // Mock authentication - in a real app, this would use a backend service
 const USERS_STORAGE_KEY = "expense-tracker-users";
@@ -20,6 +21,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(JSON.parse(storedUser));
     }
     setLoading(false);
+
+    // Set up auth state change listener for Supabase
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        if (session && session.user) {
+          const userInfo: User = { 
+            id: session.user.id, 
+            email: session.user.email || "" 
+          };
+          localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(userInfo));
+          setUser(userInfo);
+        } else if (event === "SIGNED_OUT") {
+          localStorage.removeItem(CURRENT_USER_KEY);
+          setUser(null);
+        }
+      }
+    );
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   const login = async (email: string, password: string) => {
@@ -46,6 +68,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       throw error;
     } finally {
       setLoading(false);
+    }
+  };
+
+  const signInWithGoogle = async () => {
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: window.location.origin
+        }
+      });
+      
+      if (error) throw error;
+      
+      // The rest is handled by the onAuthStateChange listener
+      toast.success("Redirecting to Google sign-in...");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Google sign-in failed");
+      setLoading(false);
+      throw error;
     }
   };
 
@@ -82,10 +125,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const logout = () => {
-    localStorage.removeItem(CURRENT_USER_KEY);
-    setUser(null);
-    toast.success("Logged out successfully");
+  const logout = async () => {
+    try {
+      // Try to sign out from Supabase first
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      
+      // Local logout as fallback
+      localStorage.removeItem(CURRENT_USER_KEY);
+      setUser(null);
+      toast.success("Logged out successfully");
+    } catch (error) {
+      console.error("Logout error:", error);
+      // Fall back to local logout if Supabase failed
+      localStorage.removeItem(CURRENT_USER_KEY);
+      setUser(null);
+      toast.success("Logged out successfully");
+    }
   };
 
   const forgotPassword = async (email: string) => {
@@ -234,7 +290,8 @@ The BudgetWise Team
       signup, 
       logout,
       forgotPassword,
-      resetPassword
+      resetPassword,
+      signInWithGoogle
     }}>
       {children}
     </AuthContext.Provider>
