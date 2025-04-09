@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Label } from "@/components/ui/label";
 import { ForgotPasswordForm } from "./ForgotPasswordForm";
 import { Separator } from "@/components/ui/separator";
-import { Github, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 
 type AuthMode = "login" | "signup" | "forgot-password";
 

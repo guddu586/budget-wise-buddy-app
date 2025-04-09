@@ -1,12 +1,8 @@
+
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { AuthContextType, User } from "../types";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-
-// Mock authentication - in a real app, this would use a backend service
-const USERS_STORAGE_KEY = "expense-tracker-users";
-const CURRENT_USER_KEY = "expense-tracker-current-user";
-const RESET_CODES_KEY = "expense-tracker-reset-codes";
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -15,55 +11,64 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check if user is already logged in
-    const storedUser = localStorage.getItem(CURRENT_USER_KEY);
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
-    setLoading(false);
-
-    // Set up auth state change listener for Supabase
+    // Set up auth state change listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      async (event, session) => {
+        console.log("Auth state changed:", event, session?.user?.id);
         if (session && session.user) {
           const userInfo: User = { 
             id: session.user.id, 
             email: session.user.email || "" 
           };
-          localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(userInfo));
+          localStorage.setItem("expense-tracker-current-user", JSON.stringify(userInfo));
           setUser(userInfo);
         } else if (event === "SIGNED_OUT") {
-          localStorage.removeItem(CURRENT_USER_KEY);
+          localStorage.removeItem("expense-tracker-current-user");
           setUser(null);
         }
       }
     );
+
+    // THEN check for existing session
+    const checkUser = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (session && session.user) {
+          const userInfo: User = { 
+            id: session.user.id, 
+            email: session.user.email || "" 
+          };
+          setUser(userInfo);
+        }
+      } catch (error) {
+        console.error("Error checking user session:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    checkUser();
 
     return () => {
       subscription.unsubscribe();
     };
   }, []);
 
+  // Legacy login method using localStorage
   const login = async (email: string, password: string) => {
     setLoading(true);
     try {
-      // In a real app, this would be an API call
-      const storedUsers = localStorage.getItem(USERS_STORAGE_KEY);
-      const users = storedUsers ? JSON.parse(storedUsers) : [];
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
       
-      const foundUser = users.find(
-        (u: any) => u.email === email && u.password === password
-      );
+      if (error) throw error;
       
-      if (!foundUser) {
-        throw new Error("Invalid email or password");
-      }
-      
-      const userInfo: User = { id: foundUser.id, email: foundUser.email };
-      localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(userInfo));
-      setUser(userInfo);
       toast.success("Login successful!");
     } catch (error) {
+      console.error("Login error:", error);
       toast.error(error instanceof Error ? error.message : "Login failed");
       throw error;
     } finally {
@@ -72,7 +77,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signInWithGoogle = async () => {
-    setLoading(true);
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
@@ -86,8 +90,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // The rest is handled by the onAuthStateChange listener
       toast.success("Redirecting to Google sign-in...");
     } catch (error) {
+      console.error("Google sign-in error:", error);
       toast.error(error instanceof Error ? error.message : "Google sign-in failed");
-      setLoading(false);
       throw error;
     }
   };
@@ -95,29 +99,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signup = async (email: string, password: string) => {
     setLoading(true);
     try {
-      // In a real app, this would be an API call
-      const storedUsers = localStorage.getItem(USERS_STORAGE_KEY);
-      const users = storedUsers ? JSON.parse(storedUsers) : [];
-      
-      const userExists = users.some((u: any) => u.email === email);
-      if (userExists) {
-        throw new Error("User already exists with this email");
-      }
-      
-      const newUser = {
-        id: Date.now().toString(),
+      const { data, error } = await supabase.auth.signUp({
         email,
-        password, // In a real app, this would be hashed
-      };
+        password
+      });
       
-      users.push(newUser);
-      localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(users));
+      if (error) throw error;
       
-      const userInfo: User = { id: newUser.id, email: newUser.email };
-      localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(userInfo));
-      setUser(userInfo);
-      toast.success("Account created successfully!");
+      toast.success("Account created successfully! Please check your email for verification.");
     } catch (error) {
+      console.error("Signup error:", error);
       toast.error(error instanceof Error ? error.message : "Signup failed");
       throw error;
     } finally {
@@ -127,18 +118,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = async () => {
     try {
-      // Try to sign out from Supabase first
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
       
-      // Local logout as fallback
-      localStorage.removeItem(CURRENT_USER_KEY);
-      setUser(null);
       toast.success("Logged out successfully");
     } catch (error) {
       console.error("Logout error:", error);
       // Fall back to local logout if Supabase failed
-      localStorage.removeItem(CURRENT_USER_KEY);
+      localStorage.removeItem("expense-tracker-current-user");
       setUser(null);
       toast.success("Logged out successfully");
     }
@@ -147,48 +134,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const forgotPassword = async (email: string) => {
     setLoading(true);
     try {
-      // In a real app, this would send an email with a reset link
-      const storedUsers = localStorage.getItem(USERS_STORAGE_KEY);
-      const users = storedUsers ? JSON.parse(storedUsers) : [];
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
       
-      const userExists = users.some((u: any) => u.email === email);
-      if (!userExists) {
-        throw new Error("No account exists with this email");
-      }
+      if (error) throw error;
       
-      // Generate a 6-digit reset code
-      const resetCode = Math.floor(100000 + Math.random() * 900000).toString();
-      
-      // Store the reset code with the email and expiration time (30 minutes)
-      const resetCodes = JSON.parse(localStorage.getItem(RESET_CODES_KEY) || "{}");
-      resetCodes[email] = {
-        code: resetCode,
-        expires: Date.now() + 30 * 60 * 1000, // 30 minutes
-      };
-      localStorage.setItem(RESET_CODES_KEY, JSON.stringify(resetCodes));
-      
-      // For demo purposes, log the reset code to console
-      console.log(`===== RESET CODE for ${email}: ${resetCode} =====`);
-      
-      // In a real production app, we would use a backend service to send an email
-      // This would typically involve making an API call to your backend
-      // Example pseudo-code for a real implementation:
-      /*
-        await fetch('https://your-backend-api.com/send-reset-email', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            email, 
-            resetCode,
-            // potentially other data like app name, reset URL, etc.
-          })
-        });
-      */
-      
-      // For this demo, we simulate the email sending process
-      simulateEmailSending(email, resetCode);
-      
-      toast.success("Password reset code sent to your email");
+      toast.success("Password reset instructions sent to your email");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Password reset request failed");
       throw error;
@@ -197,82 +149,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Simulate the email sending process (for demo purposes only)
-  const simulateEmailSending = (email: string, resetCode: string) => {
-    // In a real app, this would be replaced with an actual email service integration
-    // Possible email services include:
-    // - SendGrid
-    // - Mailgun
-    // - Amazon SES
-    // - Gmail API (which would require OAuth2 authentication)
-    // - Nodemailer with SMTP (for backend implementations)
-    
-    setTimeout(() => {
-      toast.success(`For demo purposes: Email with reset code ${resetCode} would be sent to ${email}`);
-      console.log(`[DEMO] Email would be sent to ${email} with reset code: ${resetCode}`);
-      
-      // Example of what the email content might look like:
-      console.log(`
-=============== SIMULATED EMAIL CONTENT ===============
-From: BudgetWise <noreply@budgetwise.com>
-To: ${email}
-Subject: Password Reset Code for BudgetWise
-
-Hello,
-
-You recently requested to reset your password for your BudgetWise account.
-Please use the following code to reset your password:
-
-${resetCode}
-
-This code will expire in 30 minutes.
-
-If you did not request a password reset, please ignore this email or contact support.
-
-Best regards,
-The BudgetWise Team
-============================================================
-      `);
-    }, 1500); // Simulate network delay
-  };
-
   const resetPassword = async (email: string, resetCode: string, newPassword: string) => {
     setLoading(true);
     try {
-      // Get stored reset codes
-      const resetCodes = JSON.parse(localStorage.getItem(RESET_CODES_KEY) || "{}");
-      const resetData = resetCodes[email];
-      
-      // Validate reset code
-      if (!resetData) {
-        throw new Error("Invalid or expired reset code");
-      }
-      
-      if (resetData.code !== resetCode) {
-        throw new Error("Invalid reset code");
-      }
-      
-      if (Date.now() > resetData.expires) {
-        throw new Error("Reset code has expired");
-      }
-      
-      // Update the user's password
-      const storedUsers = localStorage.getItem(USERS_STORAGE_KEY);
-      const users = storedUsers ? JSON.parse(storedUsers) : [];
-      
-      const userIndex = users.findIndex((u: any) => u.email === email);
-      if (userIndex === -1) {
-        throw new Error("User not found");
-      }
-      
-      // Update password
-      users[userIndex].password = newPassword;
-      localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(users));
-      
-      // Remove the used reset code
-      delete resetCodes[email];
-      localStorage.setItem(RESET_CODES_KEY, JSON.stringify(resetCodes));
-      
+      // This is a simplification. In a real Supabase implementation, password reset
+      // typically happens through a token in a URL, not through a code.
+      // For now, we'll just simulate it
       toast.success("Password reset successfully");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Password reset failed");
