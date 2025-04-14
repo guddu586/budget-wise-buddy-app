@@ -2,6 +2,7 @@
 export interface User {
   id: string;
   email: string;
+  preferredCurrency?: string;
 }
 
 export interface Expense {
@@ -11,6 +12,7 @@ export interface Expense {
   date: Date;
   description?: string;
   userId: string;
+  currency?: string;
 }
 
 export interface ExpenseFormData {
@@ -18,6 +20,7 @@ export interface ExpenseFormData {
   category: string;
   date: Date;
   description?: string;
+  currency?: string;
 }
 
 export interface AuthContextType {
@@ -27,7 +30,7 @@ export interface AuthContextType {
   signup: (email: string, password: string) => Promise<void>;
   logout: () => void;
   forgotPassword: (email: string) => Promise<void>;
-  resetPassword: (email: string, resetCode: string, newPassword: string) => Promise<void>;
+  resetPassword: (newPassword: string) => Promise<void>;
 }
 
 export interface ExpenseContextType {
@@ -38,3 +41,14 @@ export interface ExpenseContextType {
   getExpensesByCategory: (category: string) => Expense[];
   categories: string[];
 }
+
+export type Currency = "USD" | "INR" | "YEN" | "EURO";
+
+export const CURRENCIES: Currency[] = ["USD", "INR", "YEN", "EURO"];
+
+export const CURRENCY_SYMBOLS: Record<Currency, string> = {
+  USD: "$",
+  INR: "₹",
+  YEN: "¥",
+  EURO: "€"
+};

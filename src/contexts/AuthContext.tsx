@@ -114,6 +114,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const forgotPassword = async (email: string) => {
     setLoading(true);
     try {
+      // Use the correct Supabase method for password reset
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/reset-password`,
       });
@@ -129,12 +130,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const resetPassword = async (email: string, resetCode: string, newPassword: string) => {
+  // Updated to use Supabase's method for updating password
+  const resetPassword = async (newPassword: string) => {
     setLoading(true);
     try {
-      // This is a simplification. In a real Supabase implementation, password reset
-      // typically happens through a token in a URL, not through a code.
-      // For now, we'll just simulate it
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword
+      });
+      
+      if (error) throw error;
+      
       toast.success("Password reset successfully");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Password reset failed");

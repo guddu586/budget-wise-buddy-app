@@ -6,14 +6,14 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { InfoIcon } from "lucide-react";
+import { InfoIcon, Loader2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 type ResetMode = "request" | "reset";
 
 export const ForgotPasswordForm = ({ onCancel }: { onCancel: () => void }) => {
   const [mode, setMode] = useState<ResetMode>("request");
   const [email, setEmail] = useState("");
-  const [resetCode, setResetCode] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -21,6 +21,7 @@ export const ForgotPasswordForm = ({ onCancel }: { onCancel: () => void }) => {
   const [emailSent, setEmailSent] = useState(false);
   
   const { forgotPassword, resetPassword } = useAuth();
+  const navigate = useNavigate();
 
   const handleRequestReset = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,8 +30,8 @@ export const ForgotPasswordForm = ({ onCancel }: { onCancel: () => void }) => {
 
     try {
       await forgotPassword(email);
-      setMode("reset");
       setEmailSent(true);
+      toast.success(`Reset instructions sent to ${email}. Check your email and spam folder.`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Password reset request failed");
     } finally {
@@ -55,7 +56,7 @@ export const ForgotPasswordForm = ({ onCancel }: { onCancel: () => void }) => {
     setIsSubmitting(true);
 
     try {
-      await resetPassword(email, resetCode, newPassword);
+      await resetPassword(newPassword);
       onCancel(); // Return to login after successful reset
     } catch (err) {
       setError(err instanceof Error ? err.message : "Password reset failed");
@@ -72,8 +73,8 @@ export const ForgotPasswordForm = ({ onCancel }: { onCancel: () => void }) => {
         </CardTitle>
         <CardDescription>
           {mode === "request" 
-            ? "Enter your email to receive a password reset code" 
-            : "Enter the reset code and your new password"}
+            ? "Enter your email to receive password reset instructions" 
+            : "Enter your new password"}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -98,7 +99,7 @@ export const ForgotPasswordForm = ({ onCancel }: { onCancel: () => void }) => {
               className="w-full"
               disabled={isSubmitting}
             >
-              {isSubmitting ? "Sending..." : "Send Reset Code"}
+              {isSubmitting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Sending...</> : "Send Reset Instructions"}
             </Button>
           </form>
         ) : (
@@ -106,26 +107,15 @@ export const ForgotPasswordForm = ({ onCancel }: { onCancel: () => void }) => {
             {emailSent && (
               <Alert className="mb-4">
                 <InfoIcon className="h-4 w-4" />
-                <AlertTitle>Reset Code Sent</AlertTitle>
+                <AlertTitle>Reset Instructions Sent</AlertTitle>
                 <AlertDescription>
-                  <p>A reset code has been sent to {email}. Please check your email and enter the code below.</p>
+                  <p>Password reset instructions have been sent to {email}. Please check your email inbox and spam folder.</p>
                   <p className="mt-2 text-xs text-muted-foreground">
-                    Note: In this demo app, no actual email is sent. For testing purposes, the reset code is displayed in your browser console (F12 &gt; Console).
+                    Follow the link in the email to reset your password. If you don't see the email, check your spam folder.
                   </p>
                 </AlertDescription>
               </Alert>
             )}
-            <div className="space-y-2">
-              <Label htmlFor="reset-code">Reset Code</Label>
-              <Input
-                id="reset-code"
-                type="text"
-                placeholder="123456"
-                value={resetCode}
-                onChange={(e) => setResetCode(e.target.value)}
-                required
-              />
-            </div>
             <div className="space-y-2">
               <Label htmlFor="new-password">New Password</Label>
               <Input
@@ -158,7 +148,7 @@ export const ForgotPasswordForm = ({ onCancel }: { onCancel: () => void }) => {
               className="w-full"
               disabled={isSubmitting}
             >
-              {isSubmitting ? "Resetting..." : "Reset Password"}
+              {isSubmitting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Resetting...</> : "Reset Password"}
             </Button>
           </form>
         )}
