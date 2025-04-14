@@ -31,6 +31,7 @@ export interface AuthContextType {
   logout: () => void;
   forgotPassword: (email: string) => Promise<void>;
   resetPassword: (newPassword: string) => Promise<void>;
+  firebaseLogin: () => Promise<void>;
 }
 
 export interface ExpenseContextType {

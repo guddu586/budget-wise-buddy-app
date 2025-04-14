@@ -3,6 +3,15 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 import { AuthContextType, User } from "../types";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { 
+  signInWithPopup, 
+  GoogleAuthProvider, 
+  signInWithEmailAndPassword as firebaseSignIn,
+  createUserWithEmailAndPassword as firebaseSignUp,
+  sendPasswordResetEmail,
+  signOut as firebaseSignOut
+} from "firebase/auth";
+import { auth } from "@/integrations/firebase/config";
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -29,6 +38,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     );
 
+    // Also set up Firebase auth state listener
+    const unsubscribeFirebase = auth.onAuthStateChanged(async (firebaseUser) => {
+      if (firebaseUser) {
+        // If Firebase user exists, link with Supabase
+        try {
+          // Get the Firebase ID token
+          const idToken = await firebaseUser.getIdToken();
+          
+          // Sign in to Supabase with the Firebase token
+          const { data, error } = await supabase.auth.signInWithIdToken({
+            provider: 'firebase',
+            token: idToken,
+          });
+          
+          if (error) {
+            console.error("Error linking Firebase with Supabase:", error);
+          }
+        } catch (error) {
+          console.error("Error getting Firebase ID token:", error);
+        }
+      }
+    });
+
     // THEN check for existing session
     const checkUser = async () => {
       try {
@@ -52,6 +84,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     return () => {
       subscription.unsubscribe();
+      unsubscribeFirebase();
     };
   }, []);
 
@@ -70,6 +103,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (error) {
       console.error("Login error:", error);
       toast.error(error instanceof Error ? error.message : "Login failed");
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const firebaseLogin = async () => {
+    setLoading(true);
+    try {
+      const provider = new GoogleAuthProvider();
+      const result = await signInWithPopup(auth, provider);
+      
+      // The signed-in user info.
+      const firebaseUser = result.user;
+      
+      // Get the Google ID token
+      const idToken = await firebaseUser.getIdToken();
+      
+      // Now sign in to Supabase with the Firebase token
+      const { data, error } = await supabase.auth.signInWithIdToken({
+        provider: 'firebase',
+        token: idToken,
+      });
+      
+      if (error) throw error;
+      
+      toast.success("Firebase login successful!");
+    } catch (error) {
+      console.error("Firebase login error:", error);
+      toast.error(error instanceof Error ? error.message : "Firebase login failed");
       throw error;
     } finally {
       setLoading(false);
@@ -98,6 +161,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = async () => {
     try {
+      // Sign out from Firebase if user was logged in with Firebase
+      await firebaseSignOut(auth);
+      
+      // Sign out from Supabase
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
       
@@ -157,7 +224,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       signup, 
       logout,
       forgotPassword,
-      resetPassword
+      resetPassword,
+      firebaseLogin
     }}>
       {children}
     </AuthContext.Provider>

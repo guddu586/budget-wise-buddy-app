@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { ForgotPasswordForm } from "./ForgotPasswordForm";
-import { Loader2 } from "lucide-react";
+import { Loader2, LogIn } from "lucide-react";
 
 type AuthMode = "login" | "signup" | "forgot-password";
 
@@ -17,7 +17,7 @@ export const AuthForm = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
   
-  const { login, signup } = useAuth();
+  const { login, signup, firebaseLogin } = useAuth();
 
   const toggleMode = () => {
     setMode(mode === "login" ? "signup" : "login");
@@ -39,6 +39,18 @@ export const AuthForm = () => {
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Authentication failed");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleFirebaseLogin = async () => {
+    setError("");
+    setIsSubmitting(true);
+    try {
+      await firebaseLogin();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Firebase authentication failed");
     } finally {
       setIsSubmitting(false);
     }
@@ -106,6 +118,28 @@ export const AuthForm = () => {
             {isSubmitting 
               ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Processing...</> 
               : mode === "login" ? "Login" : "Sign Up"}
+          </Button>
+          
+          <div className="relative my-4">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-300"></div>
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-2 bg-background text-muted-foreground">
+                Or continue with
+              </span>
+            </div>
+          </div>
+          
+          <Button 
+            type="button"
+            variant="outline"
+            className="w-full"
+            onClick={handleFirebaseLogin}
+            disabled={isSubmitting}
+          >
+            <LogIn className="mr-2 h-4 w-4" />
+            Login with Firebase
           </Button>
         </form>
       </CardContent>
