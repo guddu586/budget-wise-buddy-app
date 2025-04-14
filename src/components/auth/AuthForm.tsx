@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useAuth } from "../../contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -43,13 +42,14 @@ export const AuthForm = () => {
       setIsSubmitting(false);
     }
   };
-
+  
   const handleFirebaseLogin = async () => {
     setError("");
     setIsSubmitting(true);
     try {
       await firebaseLogin();
     } catch (err) {
+      console.error("Firebase login error:", err);
       setError(err instanceof Error ? err.message : "Firebase authentication failed");
     } finally {
       setIsSubmitting(false);
