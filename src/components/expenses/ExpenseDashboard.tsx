@@ -5,9 +5,11 @@ import { ExpenseList } from "./ExpenseList";
 import { ExpenseForm } from "./ExpenseForm";
 import { CURRENCY_SYMBOLS } from "../../types";
 import { CalendarIcon, DollarSign, CreditCard, TrendingDown } from "lucide-react";
+import { useAuth } from "../../contexts/AuthContext";
 
 export const ExpenseDashboard = () => {
   const { expenses } = useExpenses();
+  const { user } = useAuth();
 
   // Calculate total expenses
   const totalExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0);
@@ -30,6 +32,11 @@ export const ExpenseDashboard = () => {
   const mostRecentDate = expenses.length > 0
     ? new Date(Math.max(...expenses.map(e => new Date(e.date).getTime())))
     : null;
+    
+  // Determine which currency symbol to display
+  const currencySymbol = expenses.length > 0 
+    ? CURRENCY_SYMBOLS[expenses[0]?.currency || "USD"] 
+    : CURRENCY_SYMBOLS["USD"];
 
   return (
     <div className="space-y-6">
@@ -41,7 +48,7 @@ export const ExpenseDashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {CURRENCY_SYMBOLS[expenses[0]?.currency || "USD"]}{totalExpenses.toFixed(2)}
+              {currencySymbol}{totalExpenses.toFixed(2)}
             </div>
             <p className="text-xs text-muted-foreground">
               Across {expenses.length} expense{expenses.length !== 1 ? "s" : ""}
@@ -59,7 +66,7 @@ export const ExpenseDashboard = () => {
               {topCategory.name !== "None" ? topCategory.name : "N/A"}
             </div>
             <p className="text-xs text-muted-foreground">
-              {topCategory.amount > 0 ? `$${topCategory.amount.toFixed(2)}` : "No expenses yet"}
+              {topCategory.amount > 0 ? `${currencySymbol}${topCategory.amount.toFixed(2)}` : "No expenses yet"}
             </p>
           </CardContent>
         </Card>
