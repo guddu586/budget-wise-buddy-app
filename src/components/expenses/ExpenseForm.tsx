@@ -1,7 +1,6 @@
-
 import { useState } from "react";
 import { useExpenses } from "../../contexts/ExpenseContext";
-import { ExpenseFormData } from "../../types";
+import { ExpenseFormData, CURRENCIES } from "../../types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -13,6 +12,7 @@ import { format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+import { Currency } from "@/types";
 
 export const ExpenseForm = () => {
   const { addExpense, categories } = useExpenses();
@@ -21,6 +21,7 @@ export const ExpenseForm = () => {
     category: "",
     date: new Date(),
     description: "",
+    currency: "USD", // Default currency
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -31,6 +32,7 @@ export const ExpenseForm = () => {
       category: "",
       date: new Date(),
       description: "",
+      currency: "USD", // Reset to default
     });
   };
 
@@ -49,7 +51,21 @@ export const ExpenseForm = () => {
           <div className="space-y-2">
             <Label htmlFor="amount">Amount</Label>
             <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+              <Select
+                value={formData.currency}
+                onValueChange={(value) => setFormData({ ...formData, currency: value as Currency })}
+              >
+                <SelectTrigger className="absolute left-1 top-1/2 -translate-y-1/2 w-20 h-8 z-10">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {CURRENCIES.map((currency) => (
+                    <SelectItem key={currency} value={currency}>
+                      {currency}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <Input
                 id="amount"
                 type="number"
@@ -57,7 +73,7 @@ export const ExpenseForm = () => {
                 min="0"
                 value={formData.amount || ""}
                 onChange={handleAmountChange}
-                className="pl-8"
+                className="pl-24"
                 required
               />
             </div>
@@ -120,7 +136,7 @@ export const ExpenseForm = () => {
               className="resize-none"
             />
           </div>
-
+          
           <Button type="submit" className="w-full">Add Expense</Button>
         </form>
       </CardContent>

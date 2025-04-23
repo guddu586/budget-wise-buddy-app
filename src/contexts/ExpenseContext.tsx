@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { Expense, ExpenseContextType, ExpenseFormData } from "../types";
 import { useAuth } from "./AuthContext";
@@ -86,6 +85,7 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
       id: Date.now().toString(),
       ...expenseData,
       userId: user.id,
+      currency: expenseData.currency || "USD", // Default to USD if not specified
     };
 
     const updatedExpenses = [...expenses, newExpense];

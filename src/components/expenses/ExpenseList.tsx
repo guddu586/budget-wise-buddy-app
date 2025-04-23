@@ -1,7 +1,6 @@
-
 import { useState } from "react";
 import { useExpenses } from "../../contexts/ExpenseContext";
-import { Expense } from "../../types";
+import { Expense, CURRENCY_SYMBOLS } from "../../types";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -85,7 +84,7 @@ const ExpenseItem = ({ expense, onDelete }: ExpenseItemProps) => {
             
             <div>
               <div className="expense-amount text-lg font-semibold">
-                ${expense.amount.toFixed(2)}
+                {CURRENCY_SYMBOLS[expense.currency || "USD"]}{expense.amount.toFixed(2)}
               </div>
               {expense.description && (
                 <p className="text-sm text-muted-foreground line-clamp-1">

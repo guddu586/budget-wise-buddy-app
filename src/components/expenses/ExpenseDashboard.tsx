@@ -3,6 +3,7 @@ import { useExpenses } from "../../contexts/ExpenseContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ExpenseList } from "./ExpenseList";
 import { ExpenseForm } from "./ExpenseForm";
+import { CURRENCY_SYMBOLS } from "../../types";
 import { CalendarIcon, DollarSign, CreditCard, TrendingDown } from "lucide-react";
 
 export const ExpenseDashboard = () => {
@@ -39,7 +40,9 @@ export const ExpenseDashboard = () => {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${totalExpenses.toFixed(2)}</div>
+            <div className="text-2xl font-bold">
+              {CURRENCY_SYMBOLS[expenses[0]?.currency || "USD"]}{totalExpenses.toFixed(2)}
+            </div>
             <p className="text-xs text-muted-foreground">
               Across {expenses.length} expense{expenses.length !== 1 ? "s" : ""}
             </p>
